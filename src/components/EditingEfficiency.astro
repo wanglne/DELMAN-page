@@ -1,0 +1,146 @@
+---
+const rows = [
+  { method: "LoRA", training: 1.5, inference: 1, asr: 23.2 },
+  { method: "SafeDecoding", training: 0.6, inference: 1.07, asr: 10.7 },
+  { method: "LED", training: 6.2, inference: 1, asr: 8.8 },
+  { method: "DELMAN", training: 0.4, inference: 1, asr: 6.7 },
+];
+const metrics = [
+  {
+    id: "training",
+    title: "Training time",
+    value: "0.4 h",
+    description:
+      "DELMAN requires 0.4 hours of training on Vicuna-7B-v1.5, compared with 0.6 hours for SafeDecoding, 1.5 hours for LoRA, and 6.2 hours for LED.",
+    note: "Training time (hours), lower is better.",
+  },
+  {
+    id: "inference",
+    title: "Inference overhead",
+    value: "1×",
+    description:
+      "DELMAN uses only the edited model at inference, maintaining 1× overhead compared with 1.07× for SafeDecoding.",
+    note: "Inference overhead is normalized to the original model (1×). Lower is better.",
+  },
+  {
+    id: "asr",
+    title: "Average ASR",
+    value: "6.7%",
+    description:
+      "DELMAN achieves 6.7% average ASR, compared with 8.8% for LED, 10.7% for SafeDecoding, and 23.2% for LoRA.",
+    note: "Average attack success rate (ASR, %), lower is better.",
+  },
+] as const;
+const format = (n: number, metric: string) =>
+  metric === "training"
+    ? `${n.toFixed(1)} h`
+    : metric === "inference"
+      ? `${n}×`
+      : `${n.toFixed(1)}%`;
+---
+
+<div
+  class="editing-efficiency-panel"
+  data-efficiency
+  data-metrics={JSON.stringify(metrics)}
+>
+  <div class="panel-header">
+    <h4 class="efficiency-chart-title">Training time ↓</h4><div
+      class="editing-efficiency-controls"
+    >
+      <label for="efficiency-metric"
+        >Metric <select id="efficiency-metric"
+          >{
+            metrics.map((metric) => (
+              <option value={metric.id}>{metric.title}</option>
+            ))
+          }</select
+        ></label>
+    </div>
+  </div>
+  <div class="editing-efficiency-body">
+    <div class="editing-efficiency-copy" aria-live="polite" aria-atomic="true">
+      <p class="editing-efficiency-number">{metrics[0].value}</p><p
+        class="editing-efficiency-description"
+      >
+        {metrics[0].description}
+      </p><p class="editing-efficiency-source">
+        Vicuna-7B-v1.5 · Single NVIDIA A40 GPU · Averaged over five runs.
+      </p>
+    </div>
+    <div class="editing-efficiency-bars" aria-live="polite">
+      {
+        metrics.map((metric, i) => (
+          <div
+            data-efficiency-metric={metric.id}
+            hidden={i !== 0}
+            role="group"
+            aria-label={`${metric.title} comparison`}
+          >
+            {rows.map((row) => (
+              <div
+                class:list={{
+                  "efficiency-cost-row": true,
+                  "efficiency-delman-cost": row.method === "DELMAN",
+                }}
+              >
+                <div class="efficiency-cost-heading">
+                  <span>{row.method}</span>
+                  <span
+                    class:list={{
+                      "best-value":
+                        row[metric.id] ===
+                        Math.min(...rows.map((item) => item[metric.id])),
+                    }}
+                  >
+                    {format(row[metric.id], metric.id)}
+                  </span>
+                </div>
+                <div class="efficiency-cost-track" aria-hidden="true">
+                  <span
+                    style={`width:${(row[metric.id] / Math.max(...rows.map((item) => item[metric.id]))) * 100}%`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div><p class="table-note editing-efficiency-note">
+    Table 2 · {metrics[0].note}
+  </p>
+</div>
+<script>
+  const root = document.querySelector<HTMLElement>("[data-efficiency]");
+  if (root) {
+    const metrics: {
+      id: string;
+      title: string;
+      value: string;
+      description: string;
+      note: string;
+    }[] = JSON.parse(root.dataset.metrics!);
+    const select = root.querySelector<HTMLSelectElement>("#efficiency-metric")!;
+    const render = () => {
+      const selected = metrics.find((metric) => metric.id === select.value)!;
+      root.querySelector<HTMLElement>(".efficiency-chart-title")!.textContent =
+        selected.title + " ↓";
+      root.querySelector<HTMLElement>(
+        ".editing-efficiency-number",
+      )!.textContent = selected.value;
+      root.querySelector<HTMLElement>(
+        ".editing-efficiency-description",
+      )!.textContent = selected.description;
+      root.querySelector<HTMLElement>(".editing-efficiency-note")!.textContent =
+        "Table 2 · " + selected.note;
+      root
+        .querySelectorAll<HTMLElement>("[data-efficiency-metric]")
+        .forEach((panel) => {
+          panel.hidden = panel.dataset.efficiencyMetric !== selected.id;
+        });
+    };
+    select.addEventListener("change", render);
+    render();
+  }
+</script>

@@ -1,0 +1,342 @@
+---
+import figures from "../data/figures.json";
+interface Props {
+  name: "method";
+  alt: string;
+}
+const { name, alt } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { file, width, height, title, fullTitle, fullDescription, steps } =
+  figures[name];
+const src = `${base}/figures/${file}`;
+---
+
+<figure class="paper-figure breakout" aria-labelledby={`figure-title-${name}`}>
+  <delman-figure
+    class="figure-player not-prose"
+    data-name={name}
+    data-full-box={`0 0 ${width} ${height}`}
+  >
+    <div class="figure-toolbar" hidden>
+      <span>{title}</span>
+      <button type="button" class="figure-play" aria-pressed="false"
+        >Play explanation</button
+      >
+    </div>
+    <div class="figure-stage">
+      <img
+        class="figure-fallback"
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+      />
+      <svg
+        class="figure-viewport"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label={alt}
+        data-alt={alt}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <clipPath id={`figure-clip-${name}`}>
+            <rect class="figure-clip" x="0" y="0" width={width} height={height}
+            ></rect>
+          </clipPath>
+        </defs>
+        <g clip-path={`url(#figure-clip-${name})`}>
+          <image href={src} width={width} height={height} />
+          <g class="figure-masks" aria-hidden="true" pointer-events="none"></g>
+          <rect
+            class="figure-focus"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"
+            rx="4"
+            visibility="hidden"></rect>
+        </g>
+      </svg>
+    </div>
+    <div class="figure-narrative" aria-live="polite" aria-atomic="true">
+      <h3 id={`figure-title-${name}`}>{fullTitle}</h3>
+      <p>{fullDescription}</p>
+    </div>
+    <div
+      class="figure-steps"
+      role="group"
+      aria-label="Choose a method explanation step"
+      hidden
+    >
+      <button
+        type="button"
+        data-step="-1"
+        data-title={fullTitle}
+        data-description={fullDescription}
+        aria-pressed="true">Full figure</button
+      >
+      {
+        steps.map((step, index) => (
+          <button
+            type="button"
+            data-step={index}
+            data-box={step.box.join(" ")}
+            data-title={step.title}
+            data-description={step.description}
+            data-masks={JSON.stringify("masks" in step ? step.masks : [])}
+            aria-pressed="false"
+          >
+            <span class="figure-step-number" aria-hidden="true">
+              {index + 1}
+            </span>
+            {step.label.includes("W_down") ? (
+              <>
+                {step.label.split("W_down")[0]}
+                <span class="figure-math">
+                  W<sub>down</sub>
+                </span>
+                {step.label.split("W_down")[1]}
+              </>
+            ) : (
+              step.label
+            )}
+          </button>
+        ))
+      }
+    </div>
+  </delman-figure>
+</figure>
+
+<script>
+  class DELMANFigure extends HTMLElement {
+    private cleanup?: () => void;
+
+    connectedCallback() {
+      if (this.cleanup) return;
+      const svg = this.querySelector<SVGSVGElement>(".figure-viewport")!;
+      const focus = this.querySelector<SVGRectElement>(".figure-focus")!;
+      const masks = this.querySelector<SVGGElement>(".figure-masks")!;
+      const clip = this.querySelector<SVGRectElement>(".figure-clip")!;
+      const play = this.querySelector<HTMLButtonElement>(".figure-play")!;
+      const controls = this.querySelector<HTMLElement>(".figure-steps")!;
+      const buttons = Array.from(
+        controls.querySelectorAll<HTMLButtonElement>("button"),
+      );
+      const steps = buttons.filter((button) => button.dataset.step !== "-1");
+      const narrative = this.querySelector<HTMLElement>(".figure-narrative")!;
+      const heading = narrative.querySelector("h3")!;
+      const paragraph = narrative.querySelector("p")!;
+      const fullBox = this.dataset.fullBox!.split(" ").map(Number);
+      const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const controller = new AbortController();
+      const { signal } = controller;
+      let currentBox = [...fullBox];
+      let index = -1;
+      let playing = false;
+      let timer: number | undefined;
+      let frame = 0;
+
+      const setHeading = (title: string) => {
+        if (!title.includes("W_down")) {
+          heading.textContent = title;
+          return;
+        }
+        const [before, after] = title.split("W_down");
+        const symbol = document.createElement("span");
+        symbol.className = "figure-math";
+        symbol.textContent = "W";
+        const subscript = document.createElement("sub");
+        subscript.textContent = "down";
+        symbol.append(subscript);
+        heading.replaceChildren(before, symbol, after);
+      };
+
+      const setDescription = (description: string) => {
+        paragraph.replaceChildren(
+          ...description.split(/\\\(([A-Za-z])\\\)/).map((part, index) => {
+            if (index % 2 === 0) return part;
+            const symbol = document.createElement("span");
+            symbol.className = "figure-math";
+            symbol.textContent = part;
+            return symbol;
+          }),
+        );
+      };
+
+      const playbackLabel = () => {
+        this.classList.toggle("is-playing", playing);
+        play.setAttribute("aria-pressed", String(playing));
+        play.textContent = playing
+          ? "Pause explanation"
+          : index === steps.length - 1
+            ? "Replay explanation"
+            : "Play explanation";
+        narrative.setAttribute("aria-live", playing ? "off" : "polite");
+      };
+      const pause = () => {
+        window.clearTimeout(timer);
+        playing = false;
+        playbackLabel();
+      };
+      const zoomTo = (destination: number[]) => {
+        cancelAnimationFrame(frame);
+        const start = [...currentBox];
+        const started = performance.now();
+        const tick = (now: number) => {
+          const progress = motion.matches
+            ? 1
+            : Math.min((now - started) / 800, 1);
+          const eased =
+            progress < 0.5
+              ? 4 * progress ** 3
+              : 1 - (-2 * progress + 2) ** 3 / 2;
+          currentBox = start.map(
+            (value, i) => value + (destination[i] - value) * eased,
+          );
+          svg.setAttribute("viewBox", currentBox.join(" "));
+          ["x", "y", "width", "height"].forEach((key, i) =>
+            clip.setAttribute(key, String(currentBox[i])),
+          );
+          if (progress < 1) frame = requestAnimationFrame(tick);
+        };
+        if (motion.matches) tick(started);
+        else frame = requestAnimationFrame(tick);
+      };
+      const showStep = (next: number) => {
+        index = next;
+        buttons.forEach((button) =>
+          button.setAttribute(
+            "aria-pressed",
+            String(Number(button.dataset.step) === index),
+          ),
+        );
+        const step = steps[index];
+        const selected = step ?? buttons[0];
+        setHeading(selected.dataset.title!);
+        setDescription(selected.dataset.description!);
+        const regions: { path: string; fill: string }[] = JSON.parse(
+          selected.dataset.masks ?? "[]",
+        );
+        masks.replaceChildren(
+          ...regions.map((region) => {
+            const path = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "path",
+            );
+            path.setAttribute("d", region.path);
+            path.setAttribute("fill", region.fill);
+            return path;
+          }),
+        );
+        focus.setAttribute("visibility", step ? "visible" : "hidden");
+        if (step) {
+          const box = step.dataset.box!.split(" ").map(Number);
+          svg.setAttribute(
+            "aria-label",
+            `${svg.dataset.alt} ${step.dataset.title}`,
+          );
+          ["x", "y", "width", "height"].forEach((key, i) =>
+            focus.setAttribute(key, String(box[i] + (i < 2 ? 0.25 : -0.5))),
+          );
+          zoomTo(box);
+        } else {
+          svg.setAttribute("aria-label", svg.dataset.alt!);
+          zoomTo(fullBox);
+        }
+        playbackLabel();
+      };
+      const schedule = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          if (index < steps.length - 1) {
+            showStep(index + 1);
+            schedule();
+          } else pause();
+        }, 7000);
+      };
+
+      buttons.forEach((button) =>
+        button.addEventListener(
+          "click",
+          () => {
+            pause();
+            showStep(Number(button.dataset.step));
+          },
+          { signal },
+        ),
+      );
+      play.addEventListener(
+        "click",
+        () => {
+          if (playing) return pause();
+          document.dispatchEvent(
+            new CustomEvent("delman:figure-play", { detail: this }),
+          );
+          if (index < 0 || index === steps.length - 1) showStep(0);
+          playing = true;
+          playbackLabel();
+          schedule();
+        },
+        { signal },
+      );
+      controls.addEventListener(
+        "keydown",
+        (event) => {
+          const selected = buttons.indexOf(event.target as HTMLButtonElement);
+          if (selected < 0) return;
+          const keys: Record<string, number> = {
+            ArrowRight: (selected + 1) % buttons.length,
+            ArrowLeft: (selected - 1 + buttons.length) % buttons.length,
+            Home: 0,
+            End: buttons.length - 1,
+          };
+          if (!(event.key in keys)) return;
+          event.preventDefault();
+          const button = buttons[keys[event.key]];
+          button.focus();
+          button.click();
+        },
+        { signal },
+      );
+      document.addEventListener(
+        "delman:figure-play",
+        (event) => {
+          if ((event as CustomEvent).detail !== this) pause();
+        },
+        { signal },
+      );
+      document.addEventListener(
+        "visibilitychange",
+        () => {
+          if (document.hidden) pause();
+        },
+        { signal },
+      );
+      const observer = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting && playing) pause();
+      });
+      observer.observe(this);
+
+      this.setAttribute("data-enhanced", "");
+      this.querySelector<HTMLElement>(".figure-toolbar")!.hidden = false;
+      controls.hidden = false;
+      this.cleanup = () => {
+        controller.abort();
+        observer.disconnect();
+        window.clearTimeout(timer);
+        cancelAnimationFrame(frame);
+      };
+    }
+
+    disconnectedCallback() {
+      this.cleanup?.();
+      this.cleanup = undefined;
+    }
+  }
+  if (!customElements.get("delman-figure"))
+    customElements.define("delman-figure", DELMANFigure);
+</script>

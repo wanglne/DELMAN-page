@@ -1,0 +1,84 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "") + "/";
+const cases = [
+  { id: "1", title: "Case 1", file: "delman-sequential-case1.png" },
+  { id: "2", title: "Case 2", file: "delman-sequential-case2.png" },
+];
+---
+
+<div class="sequence-panel">
+  <div class="panel-header">
+    <h3>Four successive safety edits</h3>
+    <span class="source-label">Figure 8</span>
+  </div>
+  <div class="sequence-grid">
+    {
+      cases.map((c) => (
+        <figure class="sequence-case" aria-label={c.title}>
+          <img
+            src={base + "figures/" + c.file}
+            alt={`${c.title}: HarmBench attack success over four successive DELMAN edits, showing the full dataset and individual edited behavior categories.`}
+            width="4000"
+            height="2500"
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+      ))
+    }
+  </div>
+  <p class="table-note">
+    Sequential editing on Llama2-7B-chat under GCG. Each case applies four
+    successive edits, with ASR tracked across the full HarmBench dataset and all
+    six behavior categories.
+  </p>
+</div>
+<details class="evidence-details">
+  <summary
+    ><span>Sequential edits: safety and utility</span><span>Table 10</span
+    ></summary
+  ><div class="details-body">
+    <div class="table-scroll">
+      <table class="result-table">
+        <thead
+          ><tr
+            ><th scope="col">Editing strategy</th><th scope="col">MT-Bench ↑</th
+            >{
+              [
+                "HarmBench",
+                "AdvBench",
+                "JailbreakBench",
+                "MaliciousInstruct",
+              ].map((name) => (
+                <th scope="col">
+                  {name}
+                  <br />
+                  ASR (%) ↓
+                </th>
+              ))
+            }</tr
+          ></thead
+        ><tbody>
+          <tr
+            ><th scope="row">DELMAN</th><td>6.31</td><td>0%</td><td>0%</td><td
+              >0%</td
+            ><td>1%</td></tr
+          >
+          <tr
+            ><th scope="row">Sequential · Case 1</th><td>6.35</td><td>3%</td><td
+              >0%</td
+            ><td>10%</td><td>0%</td></tr
+          >
+          <tr
+            ><th scope="row">Sequential · Case 2</th><td>6.64</td><td>4%</td><td
+              >5%</td
+            ><td>6%</td><td>0%</td></tr
+          >
+        </tbody>
+      </table>
+    </div><p class="table-note">
+      Llama2-7B-chat under GCG. DELMAN uses the full editing set, while sequential
+      variants apply four category specific edits.
+    </p>
+  </div>
+</details>

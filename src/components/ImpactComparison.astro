@@ -1,0 +1,110 @@
+---
+import results from "../data/results.json";
+const defaultModel = "qwen";
+const models = results.models.map((model) => ({
+  ...model,
+  before: results.utility[model.id as keyof typeof results.utility][0],
+  after: results.utility[model.id as keyof typeof results.utility][4],
+}));
+const metrics = [
+  { name: "MT-Bench", index: 0 },
+  { name: "NLI", index: 4 },
+  { name: "Reasoning", index: 5 },
+];
+---
+
+<div class="impact-comparison">
+  <div class="impact-comparison-header">
+    <h3>Before and after DELMAN</h3>
+    <label
+      ><span class="sr-only">Comparison model</span><select
+        id="impact-model"
+        aria-controls="impact-comparison-results"
+        >{
+          models.map((model) => (
+            <option value={model.id} selected={model.id === defaultModel}>
+              {model.name}
+            </option>
+          ))
+        }</select
+      ></label
+    >
+  </div>
+  <div
+    class="impact-comparison-body"
+    id="impact-comparison-results"
+    aria-live="polite"
+  >
+    {
+      models.map((model) => (
+        <table data-impact-model={model.id} hidden={model.id !== defaultModel}>
+          <caption class="sr-only">
+            {model.name}: safety and general utility before and after editing.
+          </caption>
+          <thead>
+            <tr>
+              <>
+                <th scope="col">Metric</th>
+                <th scope="col">Before</th>
+                <th scope="col">After</th>
+              </>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="group-row">
+              <th colspan="3">Jailbreak success · Lower is better</th>
+            </tr>
+            <tr>
+              <>
+                <th scope="row">
+                  Average ASR (%)
+                  <span class="impact-bar-track" aria-hidden="true">
+                    <>
+                      <span
+                        class="impact-bar-before"
+                        style={`width: ${model.before.asr}%`}
+                      />
+                      <span
+                        class="impact-bar-after"
+                        style={`width: ${model.after.asr}%`}
+                      />
+                    </>
+                  </span>
+                </th>
+                <td class="impact-before-value">
+                  {model.before.asr.toFixed(1)}
+                </td>
+                <td>{model.after.asr.toFixed(1)}</td>
+              </>
+            </tr>
+            <tr class="group-row">
+              <th colspan="3">General utility · Higher is better</th>
+            </tr>
+            {metrics.map((metric) => (
+              <tr>
+                <th scope="row">{metric.name}</th>
+                <td class="impact-before-value">
+                  {model.before.values[metric.index].value}
+                </td>
+                <td>{model.after.values[metric.index].value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))
+    }
+  </div>
+  <p class="impact-comparison-note">
+    Table 1 · ASR averages cover three attacks across four benchmarks.
+  </p>
+</div>
+<script>
+  const select = document.querySelector<HTMLSelectElement>("#impact-model");
+  select?.addEventListener("change", () => {
+    document
+      .querySelectorAll<HTMLTableElement>("[data-impact-model]")
+      .forEach((table) => {
+        table.hidden = table.dataset.impactModel !== select.value;
+      });
+  });
+</script>

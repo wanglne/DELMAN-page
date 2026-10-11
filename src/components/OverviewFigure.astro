@@ -1,0 +1,18 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "") + "/";
+---
+
+<figure class="overview-figure">
+  <div class="panel-header">
+    <h3>DELMAN in the Model Lifecycle</h3>
+    <span class="source-label">Figure 1</span>
+  </div>
+  <img
+    src={base + "figures/delman-original-overview.png"}
+    alt="DELMAN introduces dynamic defense during deployment, after foundational and downstream safety alignment. A targeted model edit changes the model's harmful response into a safe refusal."
+    width="4198"
+    height="1682"
+    loading="lazy"
+    decoding="async"
+  />
+</figure>

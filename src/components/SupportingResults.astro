@@ -1,0 +1,136 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "") + "/";
+const image = (name: string) => base + "figures/" + name;
+const extraModels = [
+  { name: "Qwen3-8B", before: [63, 38, 53, 90], after: [1, 0, 3, 5] },
+  { name: "Llama2-13B-chat", before: [14, 16, 17, 18], after: [1, 0, 0, 0] },
+  {
+    name: "Qwen2.5-14B-Instruct",
+    before: [69, 42, 68, 93],
+    after: [3, 0, 5, 3],
+  },
+];
+---
+
+<div class="results-supporting">
+  <details class="evidence-details">
+    <summary
+      ><span>Do edits transfer across harmful behaviors?</span><span
+        >Figure 6</span
+      ></summary
+    ><div class="details-body">
+      <p>
+        We edit one HarmBench behavior category at a time and evaluate all six
+        categories. The heatmaps show that targeted edits can also reduce attack
+        success on categories not used for editing.
+      </p>
+      <div class="ablation-figures">
+        <figure>
+          <img
+            src={image("delman-transfer-gcg.png")}
+            alt="Llama2-7B cross-category attack success after a single-category edit under GCG."
+            width="3319"
+            height="2454"
+            loading="lazy"
+          /><figcaption>Llama2-7B-chat · GCG</figcaption>
+        </figure><figure>
+          <img
+            src={image("delman-transfer-autodan.png")}
+            alt="Llama2-7B cross-category attack success after a single-category edit under AutoDAN."
+            width="3319"
+            height="2454"
+            loading="lazy"
+          /><figcaption>Llama2-7B-chat · AutoDAN</figcaption>
+        </figure>
+      </div>
+      <p class="table-note">
+        Columns denote editing categories, and rows denote evaluated categories.
+        Off-diagonal cells show transfer to other categories. Original ASR
+        values appear in parentheses. ASR is shown on a 0–1 scale (lower is
+        better).
+      </p>
+    </div>
+  </details>
+  <details class="evidence-details">
+    <summary
+      ><span>What do harmful key representations show?</span><span
+        >Figure 7</span
+      ></summary
+    ><div class="details-body">
+      <p>
+        PCA projections of harmful keys at the selected editing layer show
+        substantial overlap across behavior categories and datasets. This
+        suggests shared representation patterns among harmful inputs.
+      </p>
+      <div class="ablation-figures">
+        <figure>
+          <img
+            src={image("delman-keys-behaviors.png")}
+            alt="PCA projections of harmful token keys, colored by behavior category."
+            width="3453"
+            height="3363"
+            loading="lazy"
+          /><figcaption>Across harmful behaviors</figcaption>
+        </figure><figure>
+          <img
+            src={image("delman-keys-datasets.png")}
+            alt="PCA projections of harmful token keys, colored by dataset."
+            width="3453"
+            height="3363"
+            loading="lazy"
+          /><figcaption>Across datasets</figcaption>
+        </figure>
+      </div>
+    </div>
+  </details>
+  <details class="evidence-details">
+    <summary
+      ><span>Additional models and scales</span><span>Table 9</span></summary
+    ><div class="details-body">
+      <div class="table-scroll">
+        <table class="result-table">
+          <thead
+            ><tr
+              ><th scope="col">Model</th><th scope="col">Method</th>{
+                [
+                  "HarmBench",
+                  "AdvBench",
+                  "JailbreakBench",
+                  "MaliciousInstruct",
+                ].map((name) => <th scope="col">{name}</th>)
+              }</tr
+            ></thead
+          ><tbody
+            >{
+              extraModels.map((model) => (
+                <>
+                  <>
+                    <tr>
+                      <th scope="rowgroup" rowspan="2">
+                        {model.name}
+                      </th>
+                      <th scope="row">Original Model</th>
+                      {model.before.map((value) => (
+                        <td>{value}%</td>
+                      ))}
+                    </tr>
+                    <tr class="delman-row">
+                      <th scope="row">DELMAN</th>
+                      {model.after.map((value) => (
+                        <td>
+                          <strong>{value}%</strong>
+                        </td>
+                      ))}
+                    </tr>
+                  </>
+                </>
+              ))
+            }</tbody
+          >
+        </table>
+      </div><p class="table-note">
+        GCG attack success rate (ASR, %), lower is better.
+      </p>
+    </div>
+  </details>
+</div>

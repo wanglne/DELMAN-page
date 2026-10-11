@@ -1,0 +1,258 @@
+---
+import results from "../data/results.json";
+const defaultModel = results.models.find((model) => model.id === "llama2")!;
+const categories = ["safety", "utility"] as const;
+const safetyGroups = [
+  "HarmBench",
+  "AdvBench",
+  "JailbreakBench",
+  "MaliciousInstruct",
+];
+const utilityGroups = [
+  "MT-Bench",
+  "Closed-domain QA",
+  "Dialogue",
+  "NER",
+  "NLI",
+  "Reasoning",
+  "Sentiment",
+  "Summary",
+];
+const definitions = {
+  safety: {
+    title: "Jailbreak attacks · ASR ↓",
+    source: "Table 8",
+    note: "Attack success rate (ASR, %), lower is better. Bold values mark the lowest ASR among defense methods, including ties. Attack success is judged by the HarmBench classifier.",
+  },
+  utility: {
+    title: "General language capabilities ↑",
+    source: "Table 1",
+    note: "Higher utility scores are better. Bold values mark the best utility scores among defense methods (excluding LoRA), including ties. ↑ indicates improvements over the original model. Average ASR covers the 12 evaluated attack benchmark settings.",
+  },
+};
+---
+
+<div class="results-explorer" data-results>
+  <div class="results-toolbar">
+    <span class="eyebrow">Compare model performance</span><div
+      class="results-controls"
+    >
+      <label for="result-model"
+        >Model <select id="result-model"
+          >{
+            results.models.map((model) => (
+              <option value={model.id} selected={model.id === defaultModel.id}>
+                {model.name}
+              </option>
+            ))
+          }</select
+        ></label>
+    </div>
+  </div>
+  <div class="result-tabs" role="tablist" aria-label="Evaluation category">
+    {
+      categories.map((category, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${category}`}
+          aria-controls={`panel-${category}`}
+          aria-selected={i === 0}
+          tabindex={i === 0 ? 0 : -1}
+          data-category={category}
+        >
+          {category === "safety"
+            ? "Jailbreak robustness"
+            : "General utility"}
+        </button>
+      ))
+    }
+  </div>
+  {
+    categories.map((category, i) => (
+      <section
+        role="tabpanel"
+        id={`panel-${category}`}
+        aria-labelledby={`tab-${category}`}
+        tabindex="0"
+        hidden={i !== 0}
+      >
+        <div class="table-heading">
+          <>
+            <h4>{definitions[category].title}</h4>
+            <span>{definitions[category].source}</span>
+          </>
+        </div>
+        {results.models.map((model) => (
+          <div data-result-model={model.id} hidden={model.id !== defaultModel.id}>
+            <div
+              class="table-scroll"
+              role="region"
+              tabindex="0"
+              aria-label={`${model.name} ${category} results`}
+            >
+              <table
+                class:list={{
+                  "result-table": true,
+                  "utility-table": category === "utility",
+                }}
+              >
+                <caption class="sr-only">
+                  {model.name}: {definitions[category].title}.{" "}
+                  {definitions[category].source}.
+                </caption>
+                <thead>
+                  {category === "safety" ? (
+                    <>
+                      <tr>
+                        <th scope="col" rowspan="2" class="result-method-cell">
+                          Method
+                        </th>
+                        {safetyGroups.map((name) => (
+                          <th scope="colgroup" colspan="3" class="group-start">
+                            {name}
+                          </th>
+                        ))}
+                      </tr>
+                      <tr>
+                        {safetyGroups.flatMap(() =>
+                          ["GCG", "AutoDAN", "PAIR"].map((attack, k) => (
+                            <th
+                              scope="col"
+                              class:list={{ "group-start": k === 0 }}
+                            >
+                              {attack}
+                            </th>
+                          )),
+                        )}
+                      </tr>
+                    </>
+                  ) : (
+                    <tr>
+                      <th scope="col" class="result-method-cell">
+                        Method
+                      </th>
+                      {utilityGroups.map((name) => (
+                        <th scope="col">
+                          {name === "Closed-domain QA" ? (
+                            <>
+                              Closed-domain
+                              <br />
+                              QA
+                            </>
+                          ) : (
+                            name
+                          )}
+                        </th>
+                      ))}
+                      <th scope="col">
+                        Average
+                        <br />
+                        ASR (%) ↓
+                      </th>
+                    </tr>
+                  )}
+                </thead>
+                <tbody>
+                  {results[category][
+                    model.id as keyof typeof results.safety
+                  ].map((row) => (
+                    <tr class:list={{ "delman-row": row.method === "DELMAN" }}>
+                      <th scope="row" class="result-method-cell">
+                        {row.method}
+                        {row.method === "DELMAN" && (
+                          <span class="ours">(Ours)</span>
+                        )}
+                      </th>
+                      {row.values.map((cell, k) => (
+                        <td
+                          class:list={{
+                            "group-start": category === "safety" && k % 3 === 0,
+                          }}
+                        >
+                          <span class:list={{ "best-value": cell.best }}>
+                            {cell.value}
+                          </span>
+                          {category === "utility" && cell.improved && (
+                            <span
+                              class="utility-improvement"
+                              aria-label="Improvement over original model"
+                            >
+                              ↑
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                      {category === "utility" && (
+                        <td>
+                          {"asr" in row ? Number(row.asr).toFixed(1) : ""}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+        <p class="table-note">{definitions[category].note}</p>
+      </section>
+    ))
+  }
+  <noscript
+    ><p class="table-note">
+      The tables show {defaultModel.name}. See the <a
+        href="https://aclanthology.org/2025.findings-acl.598.pdf"
+        target="_blank"
+        rel="noopener noreferrer">paper</a
+      > for all model results.
+    </p></noscript
+  >
+</div>
+<script>
+  const root = document.querySelector<HTMLElement>("[data-results]");
+  if (root) {
+    const model = root.querySelector<HTMLSelectElement>("#result-model")!;
+    const tabs = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    );
+    const renderModel = () =>
+      root
+        .querySelectorAll<HTMLElement>("[data-result-model]")
+        .forEach((panel) => {
+          panel.hidden = panel.dataset.resultModel !== model.value;
+        });
+    const showCategory = (selected: HTMLButtonElement) => {
+      tabs.forEach((tab) => {
+        const active = tab === selected;
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+        root.querySelector<HTMLElement>(
+          `#${tab.getAttribute("aria-controls")}`,
+        )!.hidden = !active;
+      });
+    };
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => showCategory(tab));
+      tab.addEventListener("keydown", (event) => {
+        const next =
+          event.key === "ArrowRight"
+            ? tabs[(index + 1) % tabs.length]
+            : event.key === "ArrowLeft"
+              ? tabs[(index + tabs.length - 1) % tabs.length]
+              : event.key === "Home"
+                ? tabs[0]
+                : event.key === "End"
+                  ? tabs[tabs.length - 1]
+                  : null;
+        if (next) {
+          event.preventDefault();
+          next.click();
+          next.focus();
+        }
+      });
+    });
+    model.addEventListener("change", renderModel);
+    renderModel();
+  }
+</script>
