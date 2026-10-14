@@ -170,7 +170,8 @@ main > section > p a {
   justify-content: center;
   flex-wrap: wrap;
   gap: 1rem 2rem;
-  font-family: var(--page-title), sans-serif;
+  /* eslint-disable-next-line css/font-family-fallbacks -- The shared body font variable includes the sans-serif fallback. */
+  font-family: var(--page-body);
   font-size: 1.25rem;
   font-weight: 400;
   line-height: 1.75rem;
@@ -933,6 +934,10 @@ table {
   }
 }
 @media (max-width: 767px) {
+  .authors {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
   .section-nav-inner {
     gap: 0.5rem 0.8125rem;
     padding-inline: 0.5rem;
@@ -952,8 +957,6 @@ table {
   }
   .authors {
     gap: 0.5rem 1rem;
-    font-size: 1rem;
-    line-height: 1.5rem;
   }
   .affiliation-main {
     gap: 0.9rem;
