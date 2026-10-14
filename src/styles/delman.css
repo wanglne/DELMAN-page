@@ -24,7 +24,7 @@ body {
   margin: 0;
   color: var(--page-text);
   font:
-    400 1rem/1.6 var(--page-body),
+    400 1rem/1.5 var(--page-body),
     sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -97,17 +97,17 @@ main > section {
 }
 main > section > h2 {
   margin: 0 0 1.5rem;
-  font-size: 2.125rem;
-  line-height: 2.5rem;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: normal;
 }
 main > section > h3 {
   margin: 3rem 0 1rem;
-  font-size: 1.5rem;
-  line-height: 1.875rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  letter-spacing: normal;
 }
 #methodology > h2,
 #results > h2 {
@@ -312,17 +312,17 @@ sup {
   padding-top: 0.3rem;
 }
 .impact-copy h2 {
-  font-size: 2.125rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 2.5rem;
+  letter-spacing: normal;
+  line-height: 2.25rem;
   margin: 0 0 1.1rem;
 }
 .impact-copy h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1.875rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.75rem;
   margin: 0 0 1.5rem;
 }
 .impact-copy p {
@@ -330,7 +330,7 @@ sup {
   line-height: 1.75rem;
 }
 .impact-copy strong {
-  font-weight: 650;
+  font-weight: 700;
 }
 .impact-comparison {
   background: white;
@@ -356,16 +356,12 @@ sup {
   margin: 0;
   font-size: 1.125rem;
   line-height: 1.75rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 .impact-comparison-header {
   flex-wrap: wrap;
   padding-block: 0.75rem;
   gap: 0.5rem;
-}
-.impact-comparison-header h3 {
-  font-size: 1.5rem;
-  line-height: 1.875rem;
 }
 select {
   max-width: 100%;
@@ -490,7 +486,9 @@ select {
 .figure-toolbar {
   font-size: 1.125rem;
   line-height: 1.75rem;
-  font-weight: 650;
+}
+.figure-toolbar > span {
+  font-weight: 600;
 }
 .figure-toolbar button {
   padding: 0.45rem 0.85rem;
@@ -540,7 +538,7 @@ select {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
   line-height: 1.75rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 .figure-narrative p {
   font-size: 1.125rem;
@@ -610,7 +608,8 @@ select {
 }
 .results-toolbar .eyebrow {
   font-size: 1.125rem;
-  font-weight: 650;
+  line-height: 1.5;
+  font-weight: 600;
 }
 .results-controls {
   display: flex;
@@ -654,7 +653,8 @@ select {
 .table-heading h4 {
   margin: 0;
   font-size: 1.125rem;
-  font-weight: 600;
+  line-height: 1.5;
+  font-weight: 700;
 }
 .table-heading > span {
   font-size: 1rem;
@@ -757,7 +757,7 @@ table {
   justify-content: space-between;
   padding: 1.1rem 1.4rem;
   font-size: 1.125rem;
-  font-weight: 550;
+  font-weight: 500;
   list-style: none;
 }
 .evidence-details summary::-webkit-details-marker {
@@ -823,7 +823,7 @@ table {
   margin: 0;
   font-size: 1.125rem;
   line-height: 1.75rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 .editing-efficiency-controls {
   display: flex;
