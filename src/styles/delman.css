@@ -296,7 +296,7 @@ sup {
   border-bottom-color: var(--page-accent);
 }
 .lead-section {
-  background: #edf2eb;
+  background: var(--page-background);
   border-bottom: 1px solid #e4eadd;
 }
 .impact-inner {
