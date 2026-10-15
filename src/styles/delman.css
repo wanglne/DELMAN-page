@@ -974,9 +974,6 @@ table {
     padding: 2.3rem 1.5rem;
     gap: 1.7rem;
   }
-  .impact-comparison-header {
-    flex-wrap: nowrap;
-  }
   main > section:not(.lead-section) {
     margin-top: 4rem;
   }
@@ -994,6 +991,31 @@ table {
   .panel-header,
   .results-toolbar {
     flex-wrap: wrap;
+  }
+  .overview-figure .panel-header,
+  .sequence-panel .panel-header {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+  .overview-figure .panel-header h3,
+  .sequence-panel .panel-header h3 {
+    flex: 1;
+    min-width: 0;
+  }
+  .panel-header .source-label {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .results-controls,
+  .editing-efficiency-controls {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .results-controls label,
+  .editing-efficiency-controls label,
+  .results-controls select,
+  .editing-efficiency-controls select {
+    min-width: 0;
   }
   .panel-header,
   .table-heading,
@@ -1044,11 +1066,6 @@ table {
   }
   .result-tabs {
     padding-inline: 1rem;
-  }
-}
-@media (max-width: 400px) {
-  .impact-comparison-header {
-    flex-wrap: wrap;
   }
 }
 @media (max-width: 374px) {

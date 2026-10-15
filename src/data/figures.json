@@ -4,7 +4,7 @@
     "width": 2947,
     "height": 2493,
     "title": "Explore the editing process",
-    "fullTitle": "From Harmful Tokens to Safe Responses",
+    "fullTitle": "From harmful tokens to safe responses",
     "fullDescription": "DELMAN identifies harmful tokens, computes representative key vectors across different contexts, optimizes safe target values, and updates selected MLP down-projection weights.",
     "steps": [
       {

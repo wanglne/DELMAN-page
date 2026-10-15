@@ -84,11 +84,6 @@ export default defineConfig({
       options: {
         variants: [
           {
-            src: ["./src/assets/fonts/google-sans-latin-400.woff2"],
-            weight: "400",
-            style: "normal",
-          },
-          {
             src: ["./src/assets/fonts/google-sans-latin-600.woff2"],
             weight: "600",
             style: "normal",
@@ -97,7 +92,7 @@ export default defineConfig({
       },
       name: "Google Sans",
       cssVariable: "--font-google-sans",
-      weights: ["400", "600"],
+      weights: ["600"],
     },
     {
       provider: fontProviders.local(),
