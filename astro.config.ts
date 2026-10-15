@@ -35,30 +35,33 @@ export default defineConfig({
       minSyntaxHighlightingColorContrast: 0,
       themes: [
         {
-          name: "delman-green",
+          name: "delman-citation",
           type: "light",
-          fg: "#21312a",
+          fg: "#24292e",
           bg: "#dde5dd",
           settings: [
-            { settings: { foreground: "#21312a" } },
+            { settings: { foreground: "#24292e" } },
             {
-              scope: ["keyword", "storage", "entity.name", "support.type"],
-              settings: { foreground: "#1c5c45" },
+              scope: ["support.function.key.bibtex"],
+              settings: { foreground: "#005cc5" },
             },
             {
-              scope: ["comment", "punctuation"],
-              settings: { foreground: "#4b5b52" },
+              scope: [
+                "punctuation.definition.string.begin.bibtex",
+                "punctuation.definition.string.end.bibtex",
+              ],
+              settings: { foreground: "#032f62" },
             },
             {
               scope: [
                 "keyword.other.entry-type.bibtex",
                 "punctuation.definition.keyword.bibtex",
               ],
-              settings: { foreground: "#cf212e" },
+              settings: { foreground: "#bf3441" },
             },
             {
               scope: ["entity.name.type.entry-key.bibtex"],
-              settings: { foreground: "#6639ba" },
+              settings: { foreground: "#6f42c1" },
             },
           ],
         },
